@@ -1,4 +1,3 @@
-[index.html.html](https://github.com/user-attachments/files/27552335/index.html.html)
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -619,7 +618,7 @@ const MAIN_LOAN = 4000000;
 const FK = 'd7v4k41r01qp7l711h70d7v4k41r01qp7l711h7g';
 const LS_KEY = 'awei_v3';
 // ↓ 貼上你的 Apps Script 網址（留空 = 純本機模式）
-const GS_URL = 'https://script.google.com/macros/s/AKfycbynq0wckO_OrcsGmbgXfWbnaEmrlh_VR40Q69S0GZs43qgUzspymxxPMV1eYBYYQKjg/exec';
+const FB_URL = 'https://awei-money-default-rtdb.asia-southeast1.firebasedatabase.app/data.json';
 
 // Market card definitions
 const CARDS = [
@@ -645,13 +644,11 @@ function save() {
 }
 
 async function pushCloud() {
-  if (!GS_URL) return;
   try {
-    await fetch(GS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
+    await fetch(FB_URL, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action:'save', data: D }),
+      body: JSON.stringify(D),
     });
     setSyncStatus('✓ 已同步', 'green');
   } catch {
@@ -660,12 +657,11 @@ async function pushCloud() {
 }
 
 async function pullCloud() {
-  if (!GS_URL) { setSyncStatus('未設定雲端', 'red'); return; }
   setSyncStatus('載入中...', 'gold');
   try {
-    const r = await fetch(GS_URL + '?action=load');
-    const txt = await r.text();
-    const parsed = JSON.parse(txt);
+    const r = await fetch(FB_URL);
+    if (!r.ok) throw new Error();
+    const parsed = await r.json();
     if (parsed && (parsed.txs || parsed.loans)) {
       D = { txs: parsed.txs || [], loans: parsed.loans || [], lTxs: parsed.lTxs || {} };
       localStorage.setItem(LS_KEY, JSON.stringify(D));
